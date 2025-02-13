@@ -26,6 +26,7 @@ To put it simply, we can imagine embeddings as players in a football field. In t
 Here, we can see that Somto and Samir have the common interests of "games", Sriar and Somto have the common interest of "reading" and Samir and Driar don't have a common interest. Based on these interests, we can predict that when embedding, we would place Somto and Samir close, Somto and Driar close but place Samir and Driar far from each other.
 
 This is exactly what we see in our sample visualization:
+
 ![Example Visual](https://github.com/nERD8932/EmbeddingsAssignment/blob/main/example.png?raw=true)
 
 As we can see, through embedding we can map the complex relations of language into an abstract n-dimensional mathematical space. Embeddings are used today for most natural language processing tasks, including LLMs like ChatGPT.
