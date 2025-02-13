@@ -36,6 +36,19 @@ embeddings = model.encode(paragraphs)
 # Create a dictionary to store embeddings for each person
 person_embeddings = {attendees_map[paragraph]: embedding for paragraph, embedding in zip(paragraphs, embeddings)}
 
+# Save person embeddings to a file
+embeddings_path = project_path + "embeddings.json"
+
+# Convert NumPy arrays to lists for JSON serialization
+person_embeddings_serializable = {
+    person: embedding.tolist() for person, embedding in person_embeddings.items()
+}
+
+with open(embeddings_path, "w") as json_file:
+    json.dump(person_embeddings_serializable, json_file)
+
+print(f"Embeddings saved successfully to {embeddings_path}")
+
 
 # Reducing dimensionality of embedding data, scaling to coordinate domain/range
 reducer = umap.UMAP(random_state=42)
