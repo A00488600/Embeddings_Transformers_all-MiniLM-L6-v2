@@ -52,7 +52,7 @@ label = list(person_embeddings.keys())
 # Plotting and annotating data points
 plt.scatter(x,y)
 for i, name in enumerate(label):
-    plt.annotate(name, (x[i], y[i]), fontsize="3")
+    plt.annotate(name, (x[i], y[i]), fontsize="8")
 
 # Clean-up and Export
 plt.axis('off')
