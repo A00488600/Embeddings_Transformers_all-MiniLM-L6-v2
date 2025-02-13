@@ -37,4 +37,4 @@ df_results = pd.DataFrame(results)
 print(df_results)
 
 # Save similarity results
-#df_results.to_csv("cosine_similarity_results.csv", index=False)
+df_results.to_csv("cosine_similarity_results.csv", index=False)
