@@ -23,7 +23,7 @@ To put it simply, we can imagine embeddings as players in a football field. In t
 | Samir | I enjoy playing games like Elden Ring, Legend of Zelda and God of War. |
 | Drira | I’m passionate about hiking, reading, meditation, movies, and embracing new challenges. |
 
-Here, we can see that Somto and Samir have the common interests of "games", Sriar and Somto have the common interest of "reading" and Samir and Driar don't have a common interest. Based on these interests, we can predict that when embedding, we would place Somto and Samir close, Somto and Driar close but place Samir and Driar far from each other.
+Here, we can see that Somto and Samir have the common interests of "games", Driar and Somto have the common interest of "reading" and Samir and Driar don't have a common interest. Based on these interests, we can predict that when embedding, we would place Somto and Samir close, Somto and Driar close but place Samir and Driar far from each other.
 
 This is exactly what we see in our sample visualization:
 
