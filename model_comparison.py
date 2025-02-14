@@ -53,7 +53,7 @@ print(f"Spearman's rho: {rho:.3f}")
 print(f"p-value: {p_value:.3f}")
 
 # Print rankings side by side with indices
-print("\nRankings comparison:")
+print("\nRankings comparison for Anuja Gamage:")
 comparison = pd.DataFrame({
     'MiniLM': minilm_rankings,
     'MPNet': mpnet_rankings
