@@ -1,27 +1,19 @@
 import csv
 import umap
-from scipy import spatial
+import optuna
+import matplotlib.pyplot as plt
+from scipy import spatial, stats
 from sklearn.preprocessing import StandardScaler
 from sentence_transformers import SentenceTransformer
-import matplotlib.pyplot as plt
-from collections import defaultdict
-import pyvis
-from pyvis.network import Network
 import numpy as np
-import seaborn as sns
-import branca.colormap as cm
-import branca
-import pandas as pd
-import re
-from textwrap import wrap
 import json
 import os
 
 project_path = str(os.getcwd()) + "\\"
 
-# Read attendees and their responses from a CSV file, replace attendees.csv with own link or file name
+# Read attendees and their responses from a CSV file
 attendees_map = {}
-with open(project_path+ 'classmates.csv', newline='') as csvfile:
+with open(project_path + 'classmates.csv', newline='') as csvfile:
     attendees = csv.reader(csvfile, delimiter=',', quotechar='"')
     next(attendees)  # Skip the header row
     for row in attendees:
@@ -38,148 +30,53 @@ person_embeddings = {attendees_map[paragraph]: embedding for paragraph, embeddin
 
 # Save person embeddings to a file
 embeddings_path = project_path + "embeddings.json"
-
-# Convert NumPy arrays to lists for JSON serialization
 person_embeddings_serializable = {
     person: embedding.tolist() for person, embedding in person_embeddings.items()
 }
-
 with open(embeddings_path, "w") as json_file:
     json.dump(person_embeddings_serializable, json_file)
-
 print(f"Embeddings saved successfully to {embeddings_path}")
 
+# Function to optimize UMAP parameters
+def objective(trial):
+    n_neighbors = trial.suggest_int('n_neighbors', 2, 20)
+    min_dist = trial.suggest_float('min_dist', 0.0, 0.99)
+    metric = trial.suggest_categorical('metric', ['cosine', 'euclidean'])
 
-# Reducing dimensionality of embedding data, scaling to coordinate domain/range
-reducer = umap.UMAP(random_state=42)
+    reducer = umap.UMAP(n_neighbors=n_neighbors, min_dist=min_dist, n_components=2, metric=metric, random_state=42)
+    
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(list(person_embeddings.values()))
+    reduced_data = reducer.fit_transform(scaled_data)
+    
+    # Compute pairwise distances in original embedding space (cosine similarity)
+    original_distances = spatial.distance.pdist(embeddings, metric='cosine')
+    reduced_distances = spatial.distance.pdist(reduced_data, metric='euclidean')
+    
+    # Compute Spearman rank correlation
+    spearman_corr, _ = stats.spearmanr(original_distances, reduced_distances)
+    return spearman_corr
+
+# Run Optuna hyperparameter optimization
+study = optuna.create_study(direction='maximize')
+study.optimize(objective, n_trials=80)
+
+# Best hyperparameters
+best_params = study.best_params
+print("Best Hyperparameters:", best_params)
+
+# Apply best UMAP parameters
+best_reducer = umap.UMAP(n_neighbors=best_params['n_neighbors'], min_dist=best_params['min_dist'], n_components=2, metric=best_params['metric'], random_state=42)
 scaler = StandardScaler()
 scaled_data = scaler.fit_transform(list(person_embeddings.values()))
-reduced_data = reducer.fit_transform(scaled_data)
+final_reduced_data = best_reducer.fit_transform(scaled_data)
 
-
-# Creating lists of coordinates with accompanying labels
-x = [row[0] for row in reduced_data]
-y = [row[1] for row in reduced_data]
-label = list(person_embeddings.keys())
-
-# Plotting and annotating data points
-plt.scatter(x,y)
-for i, name in enumerate(label):
-    plt.annotate(name, (x[i], y[i]), fontsize="8")
-
-# Clean-up and Export
-plt.axis('off')
-plt.savefig(project_path+'visualization.png', dpi=800)
-
-# Providing top matches
-top_matches = {}
-all_personal_pairs = defaultdict(list)
-for person in attendees_map.values():
-    for person1 in attendees_map.values():
-        all_personal_pairs[person].append([spatial.distance.cosine(person_embeddings[person1], person_embeddings[person]), person1])
-
-n = 5
-# Collect the top n most similarity nodes
-data_day_list = []
-for person in attendees_map.values():
-    top_matches[person] = sorted(all_personal_pairs[person], key=lambda x: x[0])[1:n+1] # drop yourself, take top 5
-    a = sorted(all_personal_pairs[person], key=lambda x: x[0])[1:n+1]
-    mini_df = pd.DataFrame(a, columns=['Weight', 'Target'])
-    mini_df['Source'] = person
-    data_day_list.append(mini_df)
-
-top_matches_serializable = {
-    person: [[np.float64(weight), target] for weight, target in matches]
-    for person, matches in top_matches.items()
-}
-
-# output this information as a json
-with open(project_path + 'b_top5_matches.json', 'w') as json_file:
-    json.dump(top_matches_serializable, json_file)
-
-# Output this information as a csv
-df = pd.concat(data_day_list)
-df.to_csv(project_path + 'b_top5_matches.csv')
-
-
-# Get the colour pallette
-colour = sns.color_palette("pastel",len(x)).as_hex()
-
-# Add colour pallette to the df
-df1 = pd.DataFrame([label,colour])
-df1 = df1.T
-df1.rename(columns={0: 'Source', 1: 'Colour'},inplace=True)
-df = df.set_index('Source').join(df1.set_index('Source'))
-df['Source'] = df.index
-df = df.reset_index(drop=True)
-
-# Add colour pallette for both the df Target and Source:
-df1.rename(columns={'Source': 'Target'},inplace=True)
-df = df.set_index('Target').join(df1.set_index('Target'),lsuffix='_Source', rsuffix='_Target')
-df['Target'] = df.index
-df = df.reset_index(drop=True)
-print(df)
-
-# Add paragraphs to the df
-df2 = pd.DataFrame([label,paragraphs])
-df2 = df2.T
-df2.rename(columns={0: 'Source', 1: 'Paragraphs'},inplace=True)
-df = df.set_index('Source').join(df2.set_index('Source'))
-df['Source'] = df.index
-df = df.reset_index(drop=True)
-print(df)
-
-# Create a cleaned Dataframe of just the Source and and Paragraph information
-df_new = df[["Source","Paragraphs"]]
-df_new = df_new.drop_duplicates()
-df_new.set_index('Source', inplace=True)
-
-# Intitalize bucket size and colour palettes
-buckets = [100] * len(x)
-colour = sns.color_palette("pastel",len(x)).as_hex()
-
-# Initialize network
-g = Network(height="750px", width="100%", bgcolor="#222222", font_color="white")
-
-# Add unconnected nodes to the network
-g.add_nodes(list(range(1,len(x)+1)), value=buckets,
-                         title=paragraphs,
-                         x=np.array(x).astype(np.float64),
-                         y=np.array(y).astype(np.float64),
-                         label=label,
-                         color=colour)
-
-# Output the visualization
-g.toggle_physics(True)
-g.show(project_path+'c_simple_viz.html', notebook=False)
-
-# Initialize network
-got_net = Network(height="750px", width="100%", bgcolor="#222222", font_color="white",select_menu=True,cdn_resources='remote')
-
-# Create a dictionary of Important information
-sources = df['Source']
-targets = df['Target']
-weights = df['Weight']
-color_targets = df['Colour_Target']
-color_sources = df['Colour_Source']
-
-edge_data = zip(sources, targets, weights,color_targets,color_sources)
-
-# Add nodes and edges to the network
-for e in edge_data:
-                src = e[0]
-                dst = e[1]
-                w = e[2]
-                c_t= e[3]
-                c_s= e[4]
-                got_net.add_node(src, src, title=src,color=c_s)
-                got_net.add_node(dst, dst, title=dst)
-                got_net.add_edge(src, dst, value=w)#,color = "#c79910") # if you  want a solide colour for edges
-
-# Add paragraphs to the popup
-for i,node in enumerate(got_net.nodes):
-               content =df_new.loc[node.get("title"),"Paragraphs"]
-               node["title"] += ": "+ "\n \n" +'\n'.join(wrap(content, width=50))
-
-## Output the visualization
-got_net.show(project_path+'c_complex_viz.html', notebook=False)
+# Visualization
+plt.figure(figsize=(10, 6))
+plt.scatter(final_reduced_data[:, 0], final_reduced_data[:, 1], alpha=0.7)
+for i, name in enumerate(attendees_map.values()):
+    plt.annotate(name, (final_reduced_data[i, 0], final_reduced_data[i, 1]), fontsize=8)
+plt.title("UMAP Visualization of Sentence Embeddings")
+plt.xlabel("Component 1")
+plt.ylabel("Component 2")
+plt.show()
