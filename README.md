@@ -50,8 +50,6 @@ The ****Spearman’s rank correlation coefficient (𝜌) is 0.407**** with a ***
 - Several classmates experience shifts in ranking. For instance, **Somto Muotoe is ranked 5th in MiniLM but 2nd in MPNet**, indicating that embeddings from different models may prioritize other aspects of similarity.
 - Although there is partial agreement in rankings, the models differ in how they weigh contextual relationships, affecting the nearest neighbors identified.
 
-### **Conclusion**
-
 These findings indicate that **model choice significantly affects ranking results**. While there is some alignment between the two models, notable differences suggest that **embedding spaces encode relationships differently**, leading to varied similarity rankings. This highlights the importance of model selection in applications where ranking consistency matters.
 
 
