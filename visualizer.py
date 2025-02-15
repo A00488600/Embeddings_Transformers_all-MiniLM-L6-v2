@@ -9,6 +9,7 @@ import numpy as np
 import json
 import os
 
+# Define project path
 project_path = str(os.getcwd()) + "\\"
 
 # Read attendees and their responses from a CSV file
@@ -71,12 +72,20 @@ scaler = StandardScaler()
 scaled_data = scaler.fit_transform(list(person_embeddings.values()))
 final_reduced_data = best_reducer.fit_transform(scaled_data)
 
-# Visualization
+# Visualization and saving the plot
 plt.figure(figsize=(10, 6))
 plt.scatter(final_reduced_data[:, 0], final_reduced_data[:, 1], alpha=0.7)
+
 for i, name in enumerate(attendees_map.values()):
     plt.annotate(name, (final_reduced_data[i, 0], final_reduced_data[i, 1]), fontsize=8)
+
 plt.title("UMAP Visualization of Sentence Embeddings")
 plt.xlabel("Component 1")
 plt.ylabel("Component 2")
-plt.show()
+
+# Save the figure
+plot_path = project_path + "umap_visualization.png"
+plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+plt.close()  # Close the plot to free memory
+
+print(f"Visualization saved successfully to {plot_path}")
