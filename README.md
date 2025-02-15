@@ -88,7 +88,11 @@ These findings indicate that **model choice significantly affects ranking result
 | Greg Kirczenow   | Swim, bike, run        |
 
 2. Clone the repository
-3. Install all required packages using pip:
+3. Install all required packages using UV:
+
+- `uv sync`
+
+    Or by using pip:
 
 - `pip install -r 'req.txt`
 
