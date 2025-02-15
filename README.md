@@ -84,24 +84,16 @@ These findings indicate that **model choice significantly affects ranking result
 
 | Name  | What are your interests? (or varying permutations of this question) |
 | ----- | ------------------------------------------------------------------- |
-| Alice | I love being the universal placeholder for every CS joke ever       |
-| Bob   | I too love being the universal placeholder for every CS joke        |
+| Pawan Lingras | I do not know what I like, but I travel, swim, run, bike obsessively       |
+| Greg Kirczenow   | Swim, bike, run        |
 
 2. Clone the repository
-3. Install all required packages using pip or conda:
+3. Install all required packages using pip:
 
-- `umap-learn`
-- `scikit-learn`
-- `scipy`
-- `sentence-transformers`
-- `matplotlib`
-- `pyvis`
-- `pandas`
-- `numpy`
-- `seaborn`
-- `branca`
+- `pip install -r 'req.txt`
 
-4. Replace `attendees.csv` in `visualizer.ipynb` with the path to your downloaded data
-5. Run all cells
-6. Bask in the glory of having an awesome new poster
+
+4. Replace `classmates.csv` in `main.py` line 24, with the path to your downloaded data
+5. Run main.py
+6. Bask in the glory of having an awesome new visualization
 7. Make two (!) cool interactive visualizations
